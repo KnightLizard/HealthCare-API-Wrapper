@@ -1,0 +1,1 @@
+This library does not need an API key, so creating a wrapper will not rely on a single class to hold the API key and make calls.
