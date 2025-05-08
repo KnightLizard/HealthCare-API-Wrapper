@@ -11,11 +11,38 @@ class HealthCarePY:
         self.base_url = "https://data.healthcare.gov/api/1/"
         self.__format = "JSON"
 
+        #Create Object storing all available datasets
+
+        page_size = 100 #Maximum page size supported by API
+
+        search_url = self.base_url + f"search"
+        response = requests.get(search_url)
+
+        num_results = response.json()['total']
+        iterations = num_results // page_size + (num_results % page_size > 0)
+
+        self.datasets = {}
+        self.searchable_keywords = []
+        for i in range(iterations):
+            search_url = self.base_url + f"search?page={i+1}&page_size={page_size}"
+            response = requests.get(search_url)
+
+            response_json = response.json()
+            
+            for result in response_json['results'].keys():
+                self.searchable_keywords.extend(response_json['results'][result]['keyword'])
+
+
     ##METADATA METHODS##
     def search(self, search_text, page=None, page_size=None, ):
         """
         Returns a list of search results for the given search term.
         """
+        ##To-Do:##
+        ##Add page and page_size parameters##
+        ##Add sort_by parameter##
+        ##Add sort_order parameter##
+        ##Init Object to store search able keywords and available database metadata upon class init##
 
         url = self.base_url + "search?fulltext=\"" + search_text + "\""
 
