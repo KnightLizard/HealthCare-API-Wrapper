@@ -8,33 +8,50 @@ import json
 class HealthCarePY:
     def __init__(self):
 
-        self.base_url = "https://data.healthcare.gov/api/1/"
-        self.__format = "JSON"
-
-        #Create Object storing all available datasets
-
+        base_url = "https://data.healthcare.gov/api/1/"
         page_size = 100 #Maximum page size supported by API
 
-        search_url = self.base_url + f"search"
+        search_url = base_url + f"search"
         response = requests.get(search_url)
 
-        num_results = response.json()['total']
+        num_results = int(response.json()['total'])
         iterations = num_results // page_size + (num_results % page_size > 0)
 
-        self.datasets = {}
+        def dataset_metadata_handling(response_json, key, item):
+            """
+            Helper function for __init__ method
+            """
+            try:
+                return response_json[key][item]
+            except KeyError:
+                return None
+
+
+        self.datasets = []
         self.searchable_keywords = []
         for i in range(iterations):
-            search_url = self.base_url + f"search?page={i+1}&page_size={page_size}"
+            search_url = base_url + f"search?page={i+1}&page_size={page_size}"
             response = requests.get(search_url)
 
-            response_json = response.json()
+            response_json = response.json()['results']
             
-            for result in response_json['results'].keys():
-                self.searchable_keywords.extend(response_json['results'][result]['keyword'])
+            for result in response_json.keys():
+                self.searchable_keywords.extend(response_json[result]['keyword'])
+                self.datasets.append({
+                    "dataset": result,
+                    "title": dataset_metadata_handling(response_json, result, 'title'),
+                    "description": dataset_metadata_handling(response_json, result, 'description'),
+                    "issue date": dataset_metadata_handling(response_json, result, 'issued'),
+                    "modified date": dataset_metadata_handling(response_json, result, 'modified')
+                })
+            
+        self.searchable_keywords = list(set(self.searchable_keywords)).sort()
 
+    def get_searchable_keywords(self):
+        return self.searchable_keywords
 
     ##METADATA METHODS##
-    def search(self, search_text, page=None, page_size=None, ):
+    def search(self, search_text, page=None, page_size=None):
         """
         Returns a list of search results for the given search term.
         """
