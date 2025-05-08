@@ -1,6 +1,10 @@
 import requests
 import json
 
+##To-Do:##
+##Error Code Exception Handling##
+##Create Additional Classes for CMS, Public Payment Data, and Medicaid Data APIs##
+
 class HealthCarePY:
     def __init__(self):
 
@@ -67,6 +71,7 @@ class HealthCarePY:
 
     ##QUERY METHODS##
 
+
     ##PRIVATE CLASS METHODS##
     def __repr__(self):
         """
@@ -74,3 +79,17 @@ class HealthCarePY:
         """
 
         return "<HealthCare API Client>"
+def print_json_tree(data, indent=0):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            print('  ' * indent + str(key))
+            print_json_tree(value, indent + 1)
+    elif isinstance(data, list):
+        for i, item in enumerate(data):
+            print('  ' * indent + str(i))
+            print_json_tree(item, indent + 1)
+    else:
+        print('  ' * indent + str(data))
+
+hcpy = HealthCarePY()
+print_json_tree(hcpy.search('Brokers'))
