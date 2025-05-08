@@ -2,17 +2,13 @@ import requests
 import json
 import pandas as pd
 
-##To-Do:##
-##Error Code Exception Handling##
-##Create Additional Classes for CMS, Public Payment Data, and Medicaid Data APIs##
-##Create Parent Class for all but CMS APIs##
-
 class HealthCarePY:
     def __init__(self, *,base_url="https://data.healthcare.gov/api/1/"):
 
-        page_size = 10 #Maximum page size supported by API
+        self.base_url = base_url
+        page_size = 100 #Maximum page size supported by API
 
-        search_url = base_url + f"search"
+        search_url = self.base_url + f"search"
         response = requests.get(search_url)
 
         num_results = int(response.json()['total'])
@@ -32,7 +28,7 @@ class HealthCarePY:
         self.searchable_keywords = []
         self.distributions = []
         for i in range(iterations):
-            search_url = base_url + f"search?page={i+1}&page_size={page_size}"
+            search_url = self.base_url + f"search?page={i+1}&page_size={page_size}"
             response = requests.get(search_url)
 
             response_json = response.json()['results']
@@ -51,17 +47,22 @@ class HealthCarePY:
         self.searchable_keywords = list(set(self.searchable_keywords)).sort()
 
     def get_searchable_keywords(self):
+        """
+        Returns a list of searchable keywords.
+        """
         return self.searchable_keywords
+    
+    def get_datasets_list(self):
+        """
+        Returns a list of datasets as a Pandas DataFrame.
+        """
+        return pd.DataFrame(self.datasets)
 
     ##METADATA METHODS##
     def search(self, search_text, page=None, page_size=None):
         """
         Returns a list of search results for the given search term.
         """
-        ##To-Do:##
-        ##Add page and page_size parameters##
-        ##Add sort_by parameter##
-        ##Add sort_order parameter##
 
         url = self.base_url + "search?fulltext=\"" + search_text + "\""
 
@@ -139,4 +140,7 @@ class MedicaidAPI(HealthCarePY):
 
 class PaymentCMSAPI(HealthCarePY):
     def __init__(self):
-        super().__init__(base_url="https://data.cms.gov/api/1/")
+        super().__init__(base_url="https://openpaymentsdata.cms.gov/api/1/")
+
+pcms = MedicaidAPI()
+print(pcms.get_datasets_list())
