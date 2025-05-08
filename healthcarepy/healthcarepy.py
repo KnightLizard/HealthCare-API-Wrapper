@@ -1,15 +1,16 @@
 import requests
 import json
+import pandas as pd
 
 ##To-Do:##
 ##Error Code Exception Handling##
 ##Create Additional Classes for CMS, Public Payment Data, and Medicaid Data APIs##
+##Create Parent Class for all but CMS APIs##
 
 class HealthCarePY:
-    def __init__(self):
+    def __init__(self, *,base_url="https://data.healthcare.gov/api/1/"):
 
-        base_url = "https://data.healthcare.gov/api/1/"
-        page_size = 100 #Maximum page size supported by API
+        page_size = 10 #Maximum page size supported by API
 
         search_url = base_url + f"search"
         response = requests.get(search_url)
@@ -29,6 +30,7 @@ class HealthCarePY:
 
         self.datasets = []
         self.searchable_keywords = []
+        self.distributions = []
         for i in range(iterations):
             search_url = base_url + f"search?page={i+1}&page_size={page_size}"
             response = requests.get(search_url)
@@ -39,6 +41,7 @@ class HealthCarePY:
                 self.searchable_keywords.extend(response_json[result]['keyword'])
                 self.datasets.append({
                     "dataset": result,
+                    "datasetid": dataset_metadata_handling(response_json, result, 'identifier'),
                     "title": dataset_metadata_handling(response_json, result, 'title'),
                     "description": dataset_metadata_handling(response_json, result, 'description'),
                     "issue date": dataset_metadata_handling(response_json, result, 'issued'),
@@ -59,11 +62,17 @@ class HealthCarePY:
         ##Add page and page_size parameters##
         ##Add sort_by parameter##
         ##Add sort_order parameter##
-        ##Init Object to store search able keywords and available database metadata upon class init##
 
         url = self.base_url + "search?fulltext=\"" + search_text + "\""
 
         return requests.get(url).json()
+    
+    # def metadata_schema_error_handling(self, schema_name=None):
+    #     try:
+    #         schema_name in self.get_metadata_schemas_list()
+    #         return 1
+    #     except ValueError:
+    #         raise Exception(f"Invalid schema name: {schema_name}")
     
     def get_metadata_schemas_list(self):
         """
@@ -123,17 +132,11 @@ class HealthCarePY:
         """
 
         return "<HealthCare API Client>"
-def print_json_tree(data, indent=0):
-    if isinstance(data, dict):
-        for key, value in data.items():
-            print('  ' * indent + str(key))
-            print_json_tree(value, indent + 1)
-    elif isinstance(data, list):
-        for i, item in enumerate(data):
-            print('  ' * indent + str(i))
-            print_json_tree(item, indent + 1)
-    else:
-        print('  ' * indent + str(data))
+    
+class MedicaidAPI(HealthCarePY):
+    def __init__(self):
+        super().__init__(base_url="https://data.medicaid.gov/api/1/")
 
-hcpy = HealthCarePY()
-print_json_tree(hcpy.search('Brokers'))
+class PaymentCMSAPI(HealthCarePY):
+    def __init__(self):
+        super().__init__(base_url="https://data.cms.gov/api/1/")
