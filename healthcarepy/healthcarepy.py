@@ -74,8 +74,3 @@ class HealthCarePY:
         """
 
         return "<HealthCare API Client>"
-    
-
-hcpy = HealthCarePY()
-
-print(hcpy.get_metadata_schema_item_identifiers())
